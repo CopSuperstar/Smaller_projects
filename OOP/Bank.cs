@@ -18,12 +18,16 @@ class Bank
         public int id { get; private set; }
         public string? Owner { get; private set; }
         public decimal Balance { get; protected set; }
+        public event Action<decimal>? BalanceChanged;
+
+        protected void OnBalanceChanged() => BalanceChanged?.Invoke(Balance);
 
         public void Deposit(decimal amount)
         {
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive");
             this.Balance += amount;
+            OnBalanceChanged();
         }
 
         public virtual void Withdraw(decimal amount)
@@ -33,6 +37,7 @@ class Bank
             if (this.Balance >= amount)
             {
                 this.Balance -= amount;
+                OnBalanceChanged();
             }
             else
             {
@@ -69,6 +74,7 @@ class Bank
             if (this.Balance - amount >= -OverdraftLimit)
             {
                 this.Balance -= amount;
+                OnBalanceChanged();
             }
             else
             {
@@ -151,6 +157,22 @@ class Bank
 
     public static void Run()
     {
+        var test = new Account(99, "Test", 0);
+        test.BalanceChanged += b => Console.WriteLine($"New balance: {b}");
+        test.BalanceChanged += b => Console.WriteLine($"Second listener got {b}");
+        test.BalanceChanged += b =>
+        {
+            if (b < 20)
+            {
+                Console.WriteLine("Balance is low!");
+            }
+        };
+        test.Deposit(50);
+        test.Withdraw(40);
+        var chk = new CheckingAccount(100, "Check", 100, 200);
+        chk.BalanceChanged += b => Console.WriteLine($"Checking: {b}");
+        chk.Withdraw(50);
+        Console.WriteLine(chk.Balance);
         string startMessage = """
             Choose an Option to start:
 

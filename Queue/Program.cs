@@ -51,7 +51,6 @@ class Program
     static void Main()
     {
         MyQueue<int> q = new();
-        q.Dump();
         q.Enqueue(1);
         q.Dump();
         q.Enqueue(2);
@@ -62,14 +61,13 @@ class Program
         q.Dump();
         q.Dequeue();
         q.Dump();
+        q.Dequeue();
+        q.Dump();
         q.Enqueue(5);
         q.Dump();
         q.Enqueue(6);
         q.Dump();
-        for (int i = 0; i < 5; i++)
-        {
-            Console.WriteLine(q.Dequeue());
-            q.Dump();
-        }
+        Console.WriteLine(q.Count);
+        Console.WriteLine(q.PhysicalSize);
     }
 }

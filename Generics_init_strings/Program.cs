@@ -1,4 +1,7 @@
-﻿public class Programm
+﻿using System.Collections;
+using System.Text;
+
+public class Programm
 {
     public static T? FindMax<T>(List<T> items)
         where T : IComparable<T>
@@ -20,6 +23,11 @@
         public decimal Price { get; set; }
         public bool Sold { get; set; }
 
+        public override string ToString()
+        {
+            return $"{Price}, {Sold}";
+        }
+
         public int CompareTo(Product? other)
         {
             if (other == null)
@@ -38,10 +46,20 @@
         public int Id { get; set; }
     }
 
-    public class Repository<T>
+    public class Repository<T> : IEnumerable<T>
         where T : class, IEntity, new()
     {
-        Dictionary<int, T> repo = new();
+        private readonly Dictionary<int, T> repo = new();
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return repo.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         public void Add(T item)
         {
@@ -64,12 +82,38 @@
             Add(item);
             return item;
         }
+
+        public void AddRange(IEnumerable<T> range)
+        {
+            ArgumentNullException.ThrowIfNull(range);
+            foreach (T addition in range)
+            {
+                Add(addition);
+            }
+        }
+
+        public IEnumerable<T> GetAll() => repo.Values;
+
+        public string ExportInCsv()
+        {
+            var sb = new StringBuilder(repo.Count * 10);
+            sb.Append("id, Price, Sold");
+            sb.AppendLine();
+            foreach (var obj in this)
+            {
+                sb.Append(obj.Id).Append(", ").Append(obj).AppendLine();
+                // sb.Append($"{obj.Id}, {obj}");
+                // sb.AppendLine();
+            }
+            sb.AppendLine();
+            sb.Append($"Overall Count is {repo.Count()}");
+            return sb.ToString();
+        }
     }
 
     static void Main()
     {
         Repository<Product> myRepo = new();
-        var newProduct = myRepo.CreateNew();
         var cup = new Product
         {
             Id = 1,
@@ -82,11 +126,8 @@
             Price = 200,
             Sold = false,
         };
-        var nums = new List<int> { 1, 2, 3 };
-        var strings = new List<string> { "qwerty", "qwert", "qwer" };
-        var products = new List<Product> { cup, cap };
-        Console.WriteLine(FindMax(strings));
-        Console.WriteLine(FindMax(nums));
-        Console.WriteLine(FindMax(products).Id);
+        myRepo.Add(cup);
+        myRepo.Add(cap);
+        Console.WriteLine(myRepo.ExportInCsv());
     }
 }
